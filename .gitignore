@@ -1,0 +1,63 @@
+# ============================
+# Android / Kotlin / Gradle
+# ============================
+
+# Gradle
+.gradle/
+build/
+**/build/
+*/out/
+local.properties
+
+# Signing files
+**/*.jks
+**/*.keystore
+**/*.p12
+**/signing.properties
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/libraries/
+
+# Android specific
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.ap_
+*.aab
+
+# Kotlin
+*.kotlin_metadata
+
+# Logs
+*.log
+
+# Cache
+.cache/
+*.cache
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Gradle wrapper logs
+gradle-app.setting
+gradlew.bat
+gradlew
+
+# Jetpack Compose previews
+compose-preview-cache/
+
+# Kotlin Multiplatform (if used)
+kotlin-js-store/
+
+# NDK
+obj/
+*.elf
