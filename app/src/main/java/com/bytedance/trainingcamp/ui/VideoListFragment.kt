@@ -13,10 +13,12 @@ import com.bytedance.trainingcamp.VideoDetailActivity
 import com.bytedance.trainingcamp.adapter.VideoCardAdapter
 import com.bytedance.trainingcamp.model.VideoItem
 import com.bytedance.trainingcamp.utils.MockDataUtils
+import com.bytedance.trainingcamp.utils.CustomStaggeredGridLayoutManager
 
 class VideoListFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
+    private lateinit var swipeRefreshLayout: androidx.swiperefreshlayout.widget.SwipeRefreshLayout
     private lateinit var adapter: VideoCardAdapter
     private val videoList = mutableListOf<VideoItem>()
 
@@ -44,15 +46,32 @@ class VideoListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         recyclerView = view.findViewById(R.id.recyclerView)
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
+
+        setupSwipeRefresh()
         setupRecyclerView()
         loadData()
     }
 
+    private fun setupSwipeRefresh() {
+        swipeRefreshLayout.setColorSchemeResources(
+            R.color.purple_500,
+            R.color.purple_700,
+            R.color.teal_200
+        )
+        swipeRefreshLayout.setOnRefreshListener {
+            refreshData()
+        }
+    }
+
     private fun setupRecyclerView() {
-        // 创建瀑布流布局管理器，2列
-        val layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+        val layoutManager = CustomStaggeredGridLayoutManager(
+            2,
+            StaggeredGridLayoutManager.VERTICAL
+        )
+        layoutManager.gapStrategy = StaggeredGridLayoutManager.GAP_HANDLING_NONE
         recyclerView.layoutManager = layoutManager
 
         adapter = VideoCardAdapter(videoList) { videoItem, position ->
@@ -93,5 +112,14 @@ class VideoListFragment : Fragment() {
         // 加载更多数据
         val moreData = MockDataUtils.getMockVideoList(10)
         adapter.addData(moreData)
+    }
+
+    private fun refreshData() {
+        // 刷新数据
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            val newData = MockDataUtils.getMockVideoList(20)
+            adapter.updateData(newData)
+            swipeRefreshLayout.isRefreshing = false
+        }, 1000)
     }
 }

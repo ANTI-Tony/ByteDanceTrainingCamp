@@ -13,6 +13,7 @@ import com.bytedance.trainingcamp.adapter.CommentAdapter
 import com.bytedance.trainingcamp.model.Author
 import com.bytedance.trainingcamp.model.Comment
 import com.bytedance.trainingcamp.utils.MockDataUtils
+import com.bytedance.trainingcamp.utils.AnimationUtils
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.ui.StyledPlayerView
@@ -22,6 +23,7 @@ class VideoDetailActivity : AppCompatActivity() {
 
     private lateinit var playerView: StyledPlayerView
     private var exoPlayer: ExoPlayer? = null
+    private lateinit var loadingIndicator: android.widget.ProgressBar
 
     private lateinit var btnBack: ImageView
     private lateinit var ivAuthorAvatar: ImageView
@@ -54,6 +56,7 @@ class VideoDetailActivity : AppCompatActivity() {
 
     private fun initViews() {
         playerView = findViewById(R.id.playerView)
+        loadingIndicator = findViewById(R.id.loadingIndicator)
         btnBack = findViewById(R.id.btnBack)
         ivAuthorAvatar = findViewById(R.id.ivAuthorAvatar)
         btnFollow = findViewById(R.id.btnFollow)
@@ -107,10 +110,30 @@ class VideoDetailActivity : AppCompatActivity() {
     }
 
     private fun setupPlayerWithUrl(url: String) {
+        loadingIndicator.visibility = android.view.View.VISIBLE
+
         val mediaItem = MediaItem.fromUri(url)
         exoPlayer?.setMediaItem(mediaItem)
         exoPlayer?.prepare()
         exoPlayer?.playWhenReady = true
+
+        // 添加播放器监听
+        exoPlayer?.addListener(object : com.google.android.exoplayer2.Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                when (playbackState) {
+                    com.google.android.exoplayer2.Player.STATE_BUFFERING -> {
+                        loadingIndicator.visibility = android.view.View.VISIBLE
+                    }
+                    com.google.android.exoplayer2.Player.STATE_READY -> {
+                        loadingIndicator.visibility = android.view.View.GONE
+                    }
+                    com.google.android.exoplayer2.Player.STATE_ENDED -> {
+                        loadingIndicator.visibility = android.view.View.GONE
+                    }
+                    else -> {}
+                }
+            }
+        })
     }
 
     private fun setupListeners() {
@@ -127,6 +150,7 @@ class VideoDetailActivity : AppCompatActivity() {
             isLiked = !isLiked
             if (isLiked) {
                 likeCount++
+                AnimationUtils.likeAnimation(ivLike, true)
             } else {
                 likeCount--
             }
@@ -138,7 +162,7 @@ class VideoDetailActivity : AppCompatActivity() {
         }
 
         btnShare.setOnClickListener {
-            // 分享功能
+            shareVideo()
         }
     }
 
@@ -229,6 +253,18 @@ class VideoDetailActivity : AppCompatActivity() {
             count >= 1000 -> String.format("%.1fk", count / 1000.0)
             else -> count.toString()
         }
+    }
+
+    private fun shareVideo() {
+        val shareIntent = android.content.Intent().apply {
+            action = android.content.Intent.ACTION_SEND
+            putExtra(android.content.Intent.EXTRA_TEXT,
+                "分享视频: ${intent.getStringExtra("title")}\n" +
+                        "来自: @${intent.getStringExtra("author_name")}\n" +
+                        intent.getStringExtra("video_url"))
+            type = "text/plain"
+        }
+        startActivity(android.content.Intent.createChooser(shareIntent, "分享到"))
     }
 
     override fun onPause() {

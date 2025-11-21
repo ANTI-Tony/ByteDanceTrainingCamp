@@ -6,7 +6,7 @@ data class VideoItem(
     val coverUrl: String,
     val title: String,
     val author: Author,
-    val likeCount: Int,
+    var likeCount: Int,
     val commentCount: Int,
     var isLiked: Boolean = false,
     val description: String = ""
