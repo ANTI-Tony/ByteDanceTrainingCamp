@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ByteDanceTrainingCamp"
+rootProject.name = "DouyinClone"
 include(":app")

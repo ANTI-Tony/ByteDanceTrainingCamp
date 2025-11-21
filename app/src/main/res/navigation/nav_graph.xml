@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/feedFragment">
+
+    <fragment
+        android:id="@+id/feedFragment"
+        android:name="com.example.douyinclone.ui.feed.FeedFragment"
+        android:label="双列外流"
+        tools:layout="@layout/fragment_feed">
+        
+        <action
+            android:id="@+id/action_feed_to_video_detail"
+            app:destination="@id/videoDetailFragment"
+            app:enterAnim="@anim/slide_in_bottom"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_bottom" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/videoDetailFragment"
+        android:name="com.example.douyinclone.ui.video.VideoDetailFragment"
+        android:label="视频内流"
+        tools:layout="@layout/fragment_video_detail">
+        
+        <argument
+            android:name="videoListJson"
+            app:argType="string" />
+        
+        <argument
+            android:name="startPosition"
+            app:argType="integer"
+            android:defaultValue="0" />
+    </fragment>
+
+</navigation>
