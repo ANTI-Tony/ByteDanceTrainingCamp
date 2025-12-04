@@ -137,4 +137,25 @@ class VideoDetailViewModel @Inject constructor(
             }
         }
     }
+    
+    /**
+     * 更新视频头像
+     */
+    fun updateVideoAvatar(videoId: String, newAvatarUrl: String) {
+        val currentList = _videos.value.orEmpty().map { video ->
+            if (video.id == videoId) {
+                video.copy(authorAvatar = newAvatarUrl)
+            } else {
+                video
+            }
+        }
+        _videos.value = currentList
+        
+        // 如果当前视频就是要更新的视频，也更新当前视频
+        _currentVideo.value?.let { current ->
+            if (current.id == videoId) {
+                _currentVideo.value = current.copy(authorAvatar = newAvatarUrl)
+            }
+        }
+    }
 }

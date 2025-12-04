@@ -24,7 +24,9 @@ class VideoDetailAdapter(
     private val onLikeClick: (VideoItem) -> Unit,
     private val onCommentClick: (VideoItem) -> Unit,
     private val onShareClick: (VideoItem) -> Unit,
-    private val onDoubleTap: (VideoItem) -> Unit
+    private val onDoubleTap: (VideoItem) -> Unit,
+    private val onAvatarClick: (VideoItem) -> Unit,
+    private val onAvatarLongClick: (VideoItem) -> Unit
 ) : ListAdapter<VideoItem, VideoDetailAdapter.VideoViewHolder>(VideoDiffCallback()) {
     
     private var currentPlayingHolder: VideoViewHolder? = null
@@ -37,7 +39,7 @@ class VideoDetailAdapter(
     
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         val item = getItem(position)
-        holder.bind(item, onVideoClick, onLikeClick, onCommentClick, onShareClick, onDoubleTap)
+        holder.bind(item, onVideoClick, onLikeClick, onCommentClick, onShareClick, onDoubleTap, onAvatarClick, onAvatarLongClick)
     }
     
     override fun onViewAttachedToWindow(holder: VideoViewHolder) {
@@ -95,7 +97,9 @@ class VideoDetailAdapter(
             onLikeClick: (VideoItem) -> Unit,
             onCommentClick: (VideoItem) -> Unit,
             onShareClick: (VideoItem) -> Unit,
-            onDoubleTap: (VideoItem) -> Unit
+            onDoubleTap: (VideoItem) -> Unit,
+            onAvatarClick: (VideoItem) -> Unit,
+            onAvatarLongClick: (VideoItem) -> Unit
         ) {
             currentItem = item
             
@@ -105,8 +109,12 @@ class VideoDetailAdapter(
                 .into(ivCover)
             
             // 加载头像
+            val prefs = itemView.context.getSharedPreferences("avatar_prefs", android.content.Context.MODE_PRIVATE)
+            val customAvatarUri = prefs.getString("avatar_${item.id}", null)
+            val avatarToLoad = customAvatarUri ?: item.authorAvatar
+            
             Glide.with(itemView.context)
-                .load(item.authorAvatar)
+                .load(avatarToLoad)
                 .circleCrop()
                 .into(ivAvatar)
             
@@ -152,6 +160,15 @@ class VideoDetailAdapter(
             ivLike.setOnClickListener { onLikeClick(item) }
             ivComment.setOnClickListener { onCommentClick(item) }
             ivShare.setOnClickListener { onShareClick(item) }
+            
+            // 头像点击事件
+            ivAvatar.setOnClickListener { onAvatarClick(item) }
+            
+            // 头像长按事件
+            ivAvatar.setOnLongClickListener {
+                onAvatarLongClick(item)
+                true
+            }
         }
         
         private fun togglePlayPause() {

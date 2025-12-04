@@ -6,11 +6,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.douyinclone.BuildConfig
 import com.example.douyinclone.R
 import com.example.douyinclone.databinding.FragmentAiChatBinding
 import com.example.douyinclone.adapter.AiChatAdapter
 import com.example.douyinclone.data.model.ChatMessage
+import com.example.douyinclone.data.remote.ChatMessageReq
+import com.example.douyinclone.data.remote.ChatRequest
+import com.example.douyinclone.data.remote.DoubaoApiClient
+import kotlinx.coroutines.launch
 
 class AiChatDialogFragment : DialogFragment() {
     
@@ -19,6 +25,7 @@ class AiChatDialogFragment : DialogFragment() {
     
     private lateinit var chatAdapter: AiChatAdapter
     private val messages = mutableListOf<ChatMessage>()
+    private val doubaoApi by lazy { DoubaoApiClient.create(BuildConfig.DOUBAO_API_KEY) }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,34 +101,62 @@ class AiChatDialogFragment : DialogFragment() {
         ))
         
         binding.etMessage.text.clear()
-        
-        // 模拟AI回复
-        binding.root.postDelayed({
-            generateAiResponse(content)
-        }, 1000)
+        requestAiResponse(content)
     }
     
-    private fun generateAiResponse(userMessage: String) {
-        // 简单的模拟AI回复
-        val response = when {
-            userMessage.contains("你好") || userMessage.contains("hi", ignoreCase = true) -> 
-                "你好！很高兴见到你！有什么我可以帮助你的吗？"
-            userMessage.contains("视频") -> 
-                "这个应用是一个短视频平台，你可以在这里观看各种有趣的视频内容！"
-            userMessage.contains("功能") -> 
-                "这个应用支持双列瀑布流浏览、视频播放、点赞、评论等功能。"
-            userMessage.contains("帮助") || userMessage.contains("help", ignoreCase = true) -> 
-                "我可以回答你关于这个应用的问题，或者和你聊天。试着问我一些问题吧！"
-            else -> 
-                "收到你的消息了！这是一个演示版本的AI助手，未来会支持更多智能对话功能。"
+    private fun requestAiResponse(userMessage: String) {
+        val apiKey = BuildConfig.DOUBAO_API_KEY
+        val fallback = "AI 暂时不可用，请稍后再试。"
+        
+        android.util.Log.d("AiChat", "API Key length: ${apiKey.length}")
+        android.util.Log.d("AiChat", "API Key: ${apiKey.take(10)}...")
+        
+        if (apiKey.isBlank()) {
+            android.util.Log.e("AiChat", "API Key is blank!")
+            addMessage(ChatMessage(
+                id = "ai_${System.currentTimeMillis()}",
+                content = fallback,
+                isFromUser = false,
+                timestamp = System.currentTimeMillis()
+            ))
+            return
         }
         
-        addMessage(ChatMessage(
-            id = "ai_${System.currentTimeMillis()}",
-            content = response,
-            isFromUser = false,
-            timestamp = System.currentTimeMillis()
-        ))
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                android.util.Log.d("AiChat", "Sending request to API...")
+                android.util.Log.d("AiChat", "Using model: ${BuildConfig.DOUBAO_MODEL}")
+                val response = doubaoApi.chat(
+                    ChatRequest(
+                        model = BuildConfig.DOUBAO_MODEL,
+                        messages = listOf(ChatMessageReq(role = "user", content = userMessage))
+                    )
+                )
+                
+                android.util.Log.d("AiChat", "Response received: ${response.choices.size} choices")
+                
+                val reply = response.choices.firstOrNull()
+                    ?.message
+                    ?.content
+                    ?.takeIf { it.isNotBlank() }
+                    ?: fallback
+                
+                addMessage(ChatMessage(
+                    id = "ai_${System.currentTimeMillis()}",
+                    content = reply,
+                    isFromUser = false,
+                    timestamp = System.currentTimeMillis()
+                ))
+            } catch (e: Exception) {
+                android.util.Log.e("AiChat", "Error calling API: ${e.message}", e)
+                addMessage(ChatMessage(
+                    id = "ai_${System.currentTimeMillis()}",
+                    content = "$fallback\n错误: ${e.message}",
+                    isFromUser = false,
+                    timestamp = System.currentTimeMillis()
+                ))
+            }
+        }
     }
     
     private fun addMessage(message: ChatMessage) {

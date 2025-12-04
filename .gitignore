@@ -51,6 +51,7 @@ Thumbs.db
 gradle-app.setting
 gradlew.bat
 gradlew
+gradle/wrapper/gradle-wrapper.jar
 
 # Jetpack Compose previews
 compose-preview-cache/

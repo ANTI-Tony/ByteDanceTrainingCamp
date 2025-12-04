@@ -1,9 +1,21 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
 }
+
+// Read local secrets (e.g. Doubao API key) from local.properties
+val localProps = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        load(file.inputStream())
+    }
+}
+val doubaoApiKey = (localProps.getProperty("DOUBAO_API_KEY") ?: "").replace("\"", "\\\"")
+val doubaoModel = localProps.getProperty("DOUBAO_MODEL") ?: "doubao-seed-1-6-251015"
 
 android {
     namespace = "com.example.douyinclone"
@@ -17,6 +29,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Expose API configurations via BuildConfig (comes from local.properties, not committed)
+        buildConfigField("String", "DOUBAO_API_KEY", "\"$doubaoApiKey\"")
+        buildConfigField("String", "DOUBAO_MODEL", "\"$doubaoModel\"")
     }
 
     buildTypes {
@@ -38,6 +54,7 @@ android {
     buildFeatures {
         viewBinding = true
         dataBinding = true
+        buildConfig = true
     }
 }
 
